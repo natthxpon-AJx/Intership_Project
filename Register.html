@@ -269,7 +269,6 @@
     }
 
     input[type="text"],
-    input[type="email"],
     input[type="password"] {
       width: 100%;
       height: 48px;
@@ -509,15 +508,15 @@
           </div>
 
           <div class="field">
-            <label for="email">อีเมล</label>
+            <label for="username">ชื่อผู้ใช้งาน</label>
             <div class="input-wrap">
               <span class="input-icon">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                  <rect x="2" y="4" width="20" height="16" rx="2" />
-                  <path d="m2 4 10 8 10-8" />
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                  <circle cx="12" cy="8" r="4"/>
+                  <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
                 </svg>
               </span>
-              <input type="email" id="email" required placeholder="อีเมลของคุณ" />
+              <input type="text" id="username" required placeholder="ตั้งชื่อผู้ใช้งาน (Username)" />
             </div>
           </div>
 
@@ -530,7 +529,7 @@
                   <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
                 </svg>
               </span>
-              <input type="password" id="password" required placeholder="ตั้งรหัสผ่าน (อย่างน้อย 6 ตัวอักษร)" minlength="6" />
+              <input type="password" id="password" required placeholder="ตั้งรหัสผ่าน (อย่างน้อย 4 ตัวอักษร)" minlength="4" />
               <button type="button" class="toggle-pw" onclick="togglePassword('password')">👁</button>
             </div>
           </div>
@@ -547,13 +546,6 @@
               <input type="password" id="confirmPassword" required placeholder="กรอกรหัสผ่านอีกครั้ง" />
               <button type="button" class="toggle-pw" onclick="togglePassword('confirmPassword')">👁</button>
             </div>
-          </div>
-
-          <div class="options-row">
-            <label class="checkbox-label">
-              <input type="checkbox" required />
-              <span>ฉันยอมรับ <a href="#">ข้อกำหนดการให้บริการ</a> และ <a href="#">นโยบายความเป็นส่วนตัว</a> ของ RSP South</span>
-            </label>
           </div>
 
           <button type="submit" class="btn-submit" id="submitBtn">
