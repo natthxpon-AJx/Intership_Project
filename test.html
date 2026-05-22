@@ -98,12 +98,12 @@
       margin-bottom: 2rem;
     }
 
-    .panel-divider {
+    /* .panel-divider {
       width: 28px;
       height: 1px;
       background: rgba(255,255,255,0.15);
       margin-bottom: 1.5rem;
-    }
+    } */
 
     .panel-desc {
       font-size: 0.9rem;
@@ -398,13 +398,19 @@
       padding-top: 1.5rem;
       border-top: 1px solid var(--border);
       text-align: center;
-      font-size: .78rem;
+      font-size: .85rem;
       color: var(--text-soft);
+      line-height: 1.8;
     }
 
     .form-footer a {
-      color: var(--accent);
+      color: var(--navy);
       text-decoration: none;
+      font-weight: 600;
+    }
+
+    .form-footer a:hover {
+      color: var(--accent);
     }
 
     .status-row {
@@ -470,7 +476,7 @@
         <!-- เปลี่ยน path รูปตรงนี้ -->
         <img class="brand-logo-img" src="./south_2.png" />
 
-        <div class="panel-divider"></div>
+        <!-- <div class="panel-divider"></div> -->
 
         <p class="panel-desc">
           ระบบบริหารจัดการเนื้อหาและจอแสดงผลดิจิทัลสำหรับ Regional Science Park South
@@ -586,8 +592,8 @@
         </form>
 
         <div class="form-footer">
-          ต้องการความช่วยเหลือ?
-          <a href="#">ติดต่อผู้ดูแลระบบ</a>
+          ยังไม่มีบัญชีใช่ไหม? <a href="register.html">ลงทะเบียนใหม่</a><br>
+          <span style="font-size: 0.78rem;">ต้องการความช่วยเหลือ? <a href="#" style="font-weight: normal; color: var(--accent);">ติดต่อผู้ดูแลระบบ</a></span>
         </div>
 
         <div class="status-row">
