@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=1280, initial-scale=1.0" />
   <title>จัดการผู้ใช้งาน - RSP South Digital Board</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -14,10 +14,9 @@
 
   <div class="dashboard-layout">
     
-    <!-- Sidebar (เมนูด้านซ้าย) -->
+    <!-- Sidebar (เมนูด้านซ้ายสำหรับเดสก์ท็อป) -->
     <aside class="sidebar">
       <div class="sidebar-header">
-        <!-- กลับมาใช้รูปโลโก้แบบธรรมดา ไม่สามารถกดเปลี่ยนได้ -->
         <img src="./south_2.png" alt="Logo" class="logo-img" id="mainLogo" onerror="this.style.display='none'">
         <h2 class="logo-text">Digital Board</h2>
       </div>
@@ -35,22 +34,21 @@
           ออกจากระบบ
         </a>
       </div>
-    </aside>
+    </</aside>
 
-    <!-- Main Content (เนื้อหาหลัก) -->
+    <!-- Main Content (เนื้อหาหลักแบบเดสก์ท็อป) -->
     <main class="main-content">
       
       <!-- Header -->
       <header class="top-header">
-        <div>
+        <div class="header-text">
           <h1 class="page-title">จัดการบัญชีผู้ใช้งาน</h1>
           <p class="page-subtitle">จัดการสิทธิ์และรายชื่อผู้ที่สามารถเข้าถึงระบบ Digital Board</p>
         </div>
         <div class="user-profile">
-          <!-- กลับมาใช้รูปโปรไฟล์แบบธรรมดา ไม่สามารถกดเปลี่ยนได้ -->
-          <div class="avatar" id="mainAvatar">A</div>
+          <div class="avatar" id="mainAvatar">-</div>
           <div class="user-info">
-            <span class="user-name">Admin_South</span>
+            <span class="user-name" id="profileName">Admin_South</span>
             <span class="user-role">ผู้ดูแลระบบ</span>
           </div>
         </div>
@@ -126,7 +124,7 @@
               <tr id="row-1">
                 <td>
                   <div class="user-cell">
-                    <div class="avatar-sm bg-accent-lt text-accent">ส</div>
+                    <div class="avatar-sm bg-accent-lt text-accent">-</div>
                     <div>
                       <p class="name">สมชาย ใจดี</p>
                     </div>
@@ -158,7 +156,7 @@
               <tr id="row-2">
                 <td>
                   <div class="user-cell">
-                    <div class="avatar-sm bg-accent-lt text-accent">A</div>
+                    <div class="avatar-sm bg-accent-lt text-accent">-</div>
                     <div>
                       <p class="name">แอดมิน ภาคใต้</p>
                     </div>
@@ -186,11 +184,11 @@
                 </td>
               </tr>
 
-              <!-- Row 3: Inactive User (ระบุคลาส suspended-row) -->
+              <!-- Row 3: Inactive User -->
               <tr id="row-3" class="suspended-row">
                 <td>
                   <div class="user-cell">
-                    <div class="avatar-sm" style="background: var(--border-dk); color: white;">ม</div>
+                    <div class="avatar-sm" style="background: var(--border-dk); color: white;">-</div>
                     <div>
                       <p class="name">มานะ อดทน</p>
                     </div>
@@ -245,20 +243,22 @@
         </button>
       </div>
       <div class="modal-body">
-        <table class="data-table history-table">
-          <thead>
-            <tr>
-              <th>วันที่-เวลา</th>
-              <th>IP Address</th>
-              <th>พื้นที่เข้าใช้งาน</th>
-              <th>อุปกรณ์ / เบราว์เซอร์</th>
-              <th>status</th>
-            </tr>
-          </thead>
-          <tbody id="historyTableBody">
-            <!-- จะถูกเติมข้อมูลด้วย JavaScript -->
-          </tbody>
-        </table>
+        <div class="table-responsive">
+          <table class="data-table history-table">
+            <thead>
+              <tr>
+                <th>วันที่-เวลา</th>
+                <th>IP Address</th>
+                <th>พื้นที่เข้าใช้งาน</th>
+                <th>อุปกรณ์ / เบราว์เซอร์</th>
+                <th>สถานะ</th>
+              </tr>
+            </thead>
+            <tbody id="historyTableBody">
+              <!-- จะถูกเติมข้อมูลด้วย JavaScript -->
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   </div>
@@ -297,6 +297,39 @@
   </div>
 
   <script>
+    // ─── ฟังก์ชันคำนวณตัวอักษรย่อสำหรับภาพโปรไฟล์ (Avatar Initials) ───
+    function getInitials(name) {
+      if (!name) return '?';
+      name = name.trim();
+      let firstChar = name.charAt(0);
+      
+      const leadingVowels = ['เ', 'แ', 'โ', 'ใ', 'ไ'];
+      
+      if (leadingVowels.includes(firstChar) && name.length > 1) {
+        return name.charAt(1).toUpperCase();
+      }
+      
+      return firstChar.toUpperCase();
+    }
+
+    // ─── ฟังก์ชันสร้างตัวย่อรูปโปรไฟล์ทั้งหมดในตารางและ Header ───
+    function initializeAvatars() {
+      const rows = document.querySelectorAll('#userTableBody tr:not(.empty-state-row)');
+      rows.forEach(row => {
+        const nameEl = row.querySelector('.name');
+        const avatarEl = row.querySelector('.avatar-sm');
+        if (nameEl && avatarEl) {
+          avatarEl.textContent = getInitials(nameEl.textContent);
+        }
+      });
+
+      const profileNameEl = document.getElementById('profileName');
+      const mainAvatarEl = document.getElementById('mainAvatar');
+      if (profileNameEl && mainAvatarEl) {
+        mainAvatarEl.textContent = getInitials(profileNameEl.textContent);
+      }
+    }
+
     // ฟังก์ชันคำนวณหาจำนวนผู้ดูแลระบบ (Admin) ที่อยู่ในสถานะ Active
     function getActiveAdminCount() {
       const rows = document.querySelectorAll('#userTableBody tr:not(.empty-state-row)');
@@ -320,11 +353,9 @@
       const isActive = statusBadge && statusBadge.classList.contains('badge-active');
 
       if (selectElement.value === 'user') {
-        // หากต้องการเปลี่ยน Admin เป็น User ทั่วไป
-        // ต้องตรวจสอบว่าระบบเหลือ Admin ที่ใช้งานได้อย่างน้อย 1 คนหรือไม่
         if (isActive && getActiveAdminCount() < 1) {
           alert('ไม่สามารถเปลี่ยนบทบาทได้ เนื่องจากต้องมีผู้ดูแลระบบที่ใช้งานได้อย่างน้อย 1 คนในระบบ');
-          selectElement.value = 'admin'; // ย้อนกลับสิทธิ์เดิม
+          selectElement.value = 'admin'; 
           selectElement.className = 'role-select admin-role';
           return;
         }
@@ -354,7 +385,6 @@
         }
       });
 
-      // อัปเดตตัวเลขในการ์ด
       document.getElementById('statTotal').textContent = total;
       document.getElementById('statActive').textContent = active;
       document.getElementById('statInactive').textContent = inactive;
@@ -362,6 +392,7 @@
 
     // เรียกใช้งานฟังก์ชันเมื่อเริ่มโหลดหน้าเว็บ
     document.addEventListener('DOMContentLoaded', () => {
+      initializeAvatars(); 
       updateStatistics();
       renderTable();
     });
@@ -376,7 +407,6 @@
       const isAdmin = roleSelect && roleSelect.value === 'admin';
       const isActive = statusBadge && statusBadge.classList.contains('badge-active');
 
-      // ตรวจสอบความปลอดภัยหากพยายามลบ/ระงับแอดมินคนสุดท้าย
       if (isAdmin && isActive && getActiveAdminCount() <= 1) {
         alert('ไม่สามารถลบหรือระงับผู้ใช้งานรายนี้ได้ เนื่องจากเป็นผู้ดูแลระบบที่ใช้งานได้คนสุดท้ายในระบบ');
         return;
@@ -495,20 +525,16 @@
       const statusBadge = row.querySelector('.status-badge');
       const isCurrentlyActive = statusBadge && statusBadge.classList.contains('badge-active');
 
-      // หากพยายามเปลี่ยนสถานะของแอดมินที่กำลังใช้งาน (Active Admin) ให้ถูกระงับ (Inactive)
       if (isAdmin && isCurrentlyActive && newStatus === 'inactive') {
-        // ต้องตรวจสอบจำนวนแอดมินที่กำลังออนไลน์อยู่เช่นกัน
         if (getActiveAdminCount() <= 1) {
           alert('ไม่สามารถระงับผู้ดูแลระบบรายนี้ได้ เนื่องจากเป็นผู้ดูแลระบบที่ใช้งานได้คนสุดท้ายในระบบ');
           return;
         }
       }
       
-      // อัปเดตชื่อและตัวอักษรย่อในรูปโปรไฟล์
       row.querySelector('.name').textContent = newName;
-      row.querySelector('.avatar-sm').textContent = newName.charAt(0);
+      row.querySelector('.avatar-sm').textContent = getInitials(newName);
       
-      // อัปเดตสถานะ + เพิ่ม/ลบคลาส suspended-row สำหรับแต่งสไตล์จางลง
       const statusTd = row.querySelectorAll('td')[3];
       if(newStatus === 'active') {
         statusTd.innerHTML = '<span class="status-badge badge-active">ใช้งานได้</span>';
@@ -519,11 +545,10 @@
       }
       
       closeEditModal();
-      updateStatistics(); // อัปเดตสถิติด้านบนเผื่อมีการเปลี่ยนสถานะ
-      renderTable(); // รีเฟรชตารางใหม่เพื่อให้ตัวกรองค้นหาอัปเดตตาม
+      updateStatistics(); 
+      renderTable(); 
     }
 
-    // ปิด Modal เมื่อคลิกพื้นที่ว่างด้านนอก
     window.onclick = function(event) {
       const historyModal = document.getElementById('historyModal');
       const editModal = document.getElementById('editModal');
@@ -541,7 +566,6 @@
     let searchQuery = '';
     let statusQuery = '';
 
-    // ฟังก์ชันกรองตามสถานะจาก Dropdown
     function filterByStatus(statusValue) {
       statusQuery = statusValue;
       currentPage = 1;
@@ -553,13 +577,11 @@
       const tbody = document.getElementById('userTableBody');
       const rows = tbody.querySelectorAll('tr:not(.empty-state-row)');
       
-      // ลบข้อความแจ้งเตือนสถานะว่างเดิมออกก่อน (ถ้ามี)
       const existingEmpty = tbody.querySelector('.empty-state-row');
       if (existingEmpty) existingEmpty.remove();
 
       let matchedRows = [];
 
-      // 1. กรองข้อมูล (Search และ Status Filter)
       rows.forEach(row => {
         const nameEl = row.querySelector('.name');
         const usernameEl = row.querySelectorAll('td')[1];
@@ -587,7 +609,6 @@
 
       const totalItems = matchedRows.length;
 
-      // กรณีไม่มีข้อมูลใดๆ ในตารางเลย
       if (totalItems === 0) {
         const emptyRow = document.createElement('tr');
         emptyRow.className = 'empty-state-row';
@@ -599,14 +620,12 @@
         return;
       }
 
-      // 2. คำนวณหน้า
       const totalPages = Math.ceil(totalItems / rowsPerPage) || 1;
       if (currentPage > totalPages) currentPage = totalPages;
 
       const startIndex = (currentPage - 1) * rowsPerPage;
       const endIndex = Math.min(startIndex + rowsPerPage, totalItems);
 
-      // 3. แสดง/ซ่อนแถวตามหน้าปัจจุบัน
       matchedRows.forEach((row, index) => {
         if (index >= startIndex && index < endIndex) {
           row.style.display = '';
@@ -615,11 +634,9 @@
         }
       });
 
-      // 4. อัปเดตข้อความ Pagination
       const displayStart = totalItems === 0 ? 0 : startIndex + 1;
       document.getElementById('paginationInfo').textContent = `แสดง ${displayStart} ถึง ${endIndex} จาก ${totalItems} รายการ`;
 
-      // 5. สร้างปุ่ม Pagination
       const paginationControls = document.getElementById('paginationControls');
       if (paginationControls) {
         let buttonsHTML = `<button class="btn-page" ${currentPage === 1 ? 'disabled' : ''} onclick="changePage(${currentPage - 1})">ก่อนหน้า</button>`;
@@ -634,12 +651,12 @@
       }
     }
 
+    // ยึดค่าเปลี่ยนหน้าตรงส่วนที่เลือกให้ใช้งานบนเดสก์ท็อปได้สมบูรณ์
     function changePage(page) {
       currentPage = page;
       renderTable();
     }
 
-    // ค้นหาแบบ Real-time
     document.getElementById('searchInput').addEventListener('input', function(e) {
       searchQuery = e.target.value.toLowerCase();
       currentPage = 1;
