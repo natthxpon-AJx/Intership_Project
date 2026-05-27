@@ -3,23 +3,21 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ลงทะเบียน - RSP South Digital Signage</title>
+  <title>ลงทะเบียน - RSP South Digital Board</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="Register.css" />
 </head>
-
 <body>
 
   <div class="layout">
-
-    <!-- LEFT -->
+    
+    <!-- ฝั่งซ้าย: รูปแบรนดิ้งและชื่อระบบ -->
     <aside class="panel-left">
       <div class="brand-area">
-        <!-- เปลี่ยน path รูปตรงนี้ให้เหมือนหน้า login -->
-        <img class="brand-logo-img" src="./south_2.png" alt="RSP South Logo" onerror="this.style.display='none'" />
+        <img src="./south_2.png" alt="RSP South Logo" class="brand-logo-img" onerror="this.style.display='none'">
         <p class="panel-desc">
           ระบบบริหารจัดการเนื้อหาและจอแสดงผลดิจิทัลสำหรับ Regional Science Park South
         </p>
@@ -41,16 +39,16 @@
 
       <div>
         <p class="panel-footer-text">
-          Regional Science Park South © 2025<br>
+          Regional Science Park South © 2026<br>
           Digital Signage Platform
         </p>
       </div>
     </aside>
 
-    <!-- RIGHT -->
+    <!-- ฝั่งขวา: ฟอร์มกรอกข้อมูล -->
     <main class="panel-right">
-      <div class="form-container" id="formContainer">
-
+      <div class="form-container">
+        
         <div class="form-header">
           <p class="form-eyebrow">RSP South DigiBoard</p>
           <h1 class="form-heading">สร้างบัญชีใหม่</h1>
@@ -60,7 +58,7 @@
           </p>
         </div>
 
-        <form id="registerForm">
+        <form id="registerForm" method="POST" action="register_process.php">
 
           <!-- แถวสำหรับ ชื่อ-นามสกุล -->
           <div class="name-row">
@@ -73,7 +71,7 @@
                     <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
                   </svg>
                 </span>
-                <input type="text" id="firstName" required placeholder="ชื่อจริง" />
+                <input type="text" id="firstName" name="first_name" required placeholder="ชื่อจริง" />
               </div>
             </div>
 
@@ -86,7 +84,7 @@
                     <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
                   </svg>
                 </span>
-                <input type="text" id="lastName" required placeholder="นามสกุล" />
+                <input type="text" id="lastName" name="last_name" required placeholder="นามสกุล" />
               </div>
             </div>
           </div>
@@ -100,7 +98,7 @@
                   <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
                 </svg>
               </span>
-              <input type="text" id="username" required placeholder="ตั้งชื่อผู้ใช้งาน (Username)" />
+              <input type="text" id="username" name="username" required placeholder="ตั้งชื่อผู้ใช้งาน (Username)" />
             </div>
           </div>
 
@@ -113,7 +111,7 @@
                   <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
                 </svg>
               </span>
-              <input type="password" id="password" required placeholder="ตั้งรหัสผ่าน (อย่างน้อย 4 ตัวอักษร)" minlength="4" />
+              <input type="password" id="password" name="password" required placeholder="ตั้งรหัสผ่าน (อย่างน้อย 4 ตัวอักษร)" minlength="4" />
               <button type="button" class="toggle-pw" onclick="togglePassword('password')">👁</button>
             </div>
           </div>
@@ -127,7 +125,7 @@
                   <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
                 </svg>
               </span>
-              <input type="password" id="confirmPassword" required placeholder="กรอกรหัสผ่านอีกครั้ง" />
+              <input type="password" id="confirmPassword" name="confirm_password" required placeholder="กรอกรหัสผ่านอีกครั้ง" />
               <button type="button" class="toggle-pw" onclick="togglePassword('confirmPassword')">👁</button>
             </div>
           </div>
@@ -136,33 +134,17 @@
             ลงทะเบียน
           </button>
 
+          <!-- แจ้งเตือนข้อผิดพลาดรหัสผ่านไม่ตรงกัน ปรับให้เข้ากับ CSS คลาส .msg-box และ .msg-error -->
           <div class="msg-box msg-error" id="errorMsg">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-top:2px;">
-              <circle cx="12" cy="12" r="10"></circle>
-              <line x1="12" y1="8" x2="12" y2="12"></line>
-              <line x1="12" y1="16" x2="12.01" y2="16"></line>
-            </svg>
-            <span id="errorText">รหัสผ่านและการยืนยันรหัสผ่านไม่ตรงกัน</span>
+            รหัสผ่านและการยืนยันรหัสผ่านไม่ตรงกัน กรุณาตรวจสอบอีกครั้ง
           </div>
 
         </form>
 
-        <!-- ข้อความเมื่อลงทะเบียนสำเร็จ (ซ่อนไว้ก่อน) -->
-        <div class="msg-box msg-success" id="successMsg">
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 12px;">
-            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-            <polyline points="22 4 12 14.01 9 11.01"></polyline>
-          </svg>
-          <h3 style="font-size: 1.2rem; margin-bottom: 8px; color: var(--navy);">ลงทะเบียนสำเร็จ!</h3>
-          <p style="color: var(--text-mid); font-size: 0.9rem; margin-bottom: 20px;">บัญชีของคุณถูกสร้างเรียบร้อยแล้ว คุณสามารถเข้าสู่ระบบเพื่อใช้งานได้ทันที</p>
-          <button onclick="window.location.href='login.html'" class="btn-submit" style="height: 42px; width: 80%;">
-            เข้าสู่ระบบทันที
-          </button>
-        </div>
-
         <div class="form-footer" id="formFooter">
           มีบัญชีอยู่แล้วใช่ไหม? 
-          <a href="login.html">เข้าสู่ระบบ</a>
+          <!-- เชื่อมโยงไปยังหน้าล็อกอิน PHP ที่เปลี่ยนชื่อแล้ว -->
+          <a href="login.php">เข้าสู่ระบบ</a>
         </div>
 
       </div>
@@ -178,8 +160,6 @@
     }
 
     document.getElementById('registerForm').addEventListener('submit', function(e) {
-      e.preventDefault();
-
       const password = document.getElementById('password').value;
       const confirmPassword = document.getElementById('confirmPassword').value;
       const errorMsg = document.getElementById('errorMsg');
@@ -189,15 +169,15 @@
 
       // ตรวจสอบรหัสผ่านตรงกัน
       if (password !== confirmPassword) {
+        e.preventDefault(); 
         errorMsg.classList.add('show');
         document.getElementById('confirmPassword').focus();
         return;
       }
 
-      // สถานะกำลังโหลด
       submitBtn.disabled = true;
       submitBtn.innerHTML = `
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="animation: spin 1s linear infinite;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="animation: spin 1s linear infinite; margin-right: 8px;">
           <line x1="12" y1="2" x2="12" y2="6"></line>
           <line x1="12" y1="18" x2="12" y2="22"></line>
           <line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line>
@@ -209,26 +189,7 @@
         </svg>
         กำลังดำเนินการ...
       `;
-
-      // จำลองการส่งข้อมูล (Delay 1.5 วินาที)
-      setTimeout(() => {
-        // ซ่อนฟอร์มและแสดงหน้าสำเร็จ
-        document.getElementById('registerForm').style.display = 'none';
-        document.getElementById('formFooter').style.display = 'none';
-        document.getElementById('successMsg').classList.add('show');
-      }, 1500);
     });
-
-    // ล้างแจ้งเตือนเมื่อเริ่มพิมพ์ใหม่
-    document.getElementById('confirmPassword').addEventListener('input', () => {
-      document.getElementById('errorMsg').classList.remove('show');
-    });
-
-    // เพิ่ม style คีย์เฟรมหมุนสำหรับการโหลด
-    const style = document.createElement('style');
-    style.innerHTML = `@keyframes spin { 100% { transform: rotate(360deg); } }`;
-    document.head.appendChild(style);
   </script>
-
 </body>
 </html>

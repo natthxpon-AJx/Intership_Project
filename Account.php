@@ -1,8 +1,48 @@
+<?php
+// เริ่มต้นใช้งาน Session
+session_start();
+
+// เรียกใช้ไฟล์เชื่อมต่อฐานข้อมูล
+require 'db.php'; 
+
+// ดักจับผู้ใช้งาน: หากยังไม่ได้ล็อกอิน ให้เด้งกลับไปหน้า login.php
+if (!isset($_SESSION['user_id'])) {
+    header("Location: login.php");
+    exit;
+}
+
+// ตรวจสอบสิทธิ์: เฉพาะ admin เท่านั้นที่เข้าได้
+if ($_SESSION['role'] !== 'admin') {
+    echo "<script>
+            alert('คุณไม่มีสิทธิ์เข้าถึงหน้านี้ เฉพาะผู้ดูแลระบบเท่านั้น');
+            window.location.href = 'login.php';
+          </script>";
+    exit;
+}
+
+$admin_full_name = htmlspecialchars($_SESSION['first_name'] . " " . $_SESSION['last_name']);
+
+// --- ส่วนที่เพิ่มใหม่: ดึงข้อมูลผู้ใช้งานทั้งหมดจากฐานข้อมูล ---
+try {
+    $sql = "SELECT * FROM users ORDER BY created_at DESC";
+    $stmt = $conn->prepare($sql);
+    $stmt->execute();
+    $all_users = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch(PDOException $e) {
+    die("ไม่สามารถดึงข้อมูลได้: " . $e->getMessage());
+}
+
+// ฟังก์ชันสำหรับแปลงวันที่ให้อ่านง่ายขึ้น (Optional)
+function formatThaiDate($dateString) {
+    $time = strtotime($dateString);
+    return date('d/m/Y', $time);
+}
+?>
 <!DOCTYPE html>
 <html lang="th">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=1280, initial-scale=1.0" />
   <title>จัดการผู้ใช้งาน - RSP South Digital Board</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -14,10 +54,9 @@
 
   <div class="dashboard-layout">
     
-    <!-- Sidebar (เมนูด้านซ้าย) -->
+    <!-- Sidebar (เมนูด้านซ้ายสำหรับเดสก์ท็อป) -->
     <aside class="sidebar">
       <div class="sidebar-header">
-        <!-- กลับมาใช้รูปโลโก้แบบธรรมดา ไม่สามารถกดเปลี่ยนได้ -->
         <img src="./south_2.png" alt="Logo" class="logo-img" id="mainLogo" onerror="this.style.display='none'">
         <h2 class="logo-text">Digital Board</h2>
       </div>
@@ -30,27 +69,26 @@
       </nav>
 
       <div class="sidebar-footer">
-        <a href="login.html" class="nav-item text-danger">
+        <a href="logout.php" class="nav-item text-danger">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
           ออกจากระบบ
         </a>
       </div>
     </aside>
 
-    <!-- Main Content (เนื้อหาหลัก) -->
+    <!-- Main Content -->
     <main class="main-content">
       
       <!-- Header -->
       <header class="top-header">
-        <div>
+        <div class="header-text">
           <h1 class="page-title">จัดการบัญชีผู้ใช้งาน</h1>
           <p class="page-subtitle">จัดการสิทธิ์และรายชื่อผู้ที่สามารถเข้าถึงระบบ Digital Board</p>
         </div>
         <div class="user-profile">
-          <!-- กลับมาใช้รูปโปรไฟล์แบบธรรมดา ไม่สามารถกดเปลี่ยนได้ (จะอัปเดตอักษรย่ออัตโนมัติจาก JavaScript) -->
           <div class="avatar" id="mainAvatar">-</div>
           <div class="user-info">
-            <span class="user-name" id="profileName">Admin_South</span>
+            <span class="user-name" id="profileName"><?php echo $admin_full_name; ?></span>
             <span class="user-role">ผู้ดูแลระบบ</span>
           </div>
         </div>
@@ -92,7 +130,7 @@
       <!-- Table Section -->
       <section class="table-section">
         
-        <!-- Controls (Search & Filter) -->
+        <!-- Controls -->
         <div class="table-controls">
           <div class="search-filter-group">
             <div class="search-box">
@@ -122,102 +160,55 @@
             </thead>
             <tbody id="userTableBody">
               
-              <!-- Row 1: Active User -->
-              <tr id="row-1">
+              <!-- วนลูปแสดงข้อมูลจริงจาก Database ด้วย PHP -->
+              <?php foreach ($all_users as $user): 
+                  $full_name = htmlspecialchars($user['first_name'] . ' ' . $user['last_name']);
+                  $username = htmlspecialchars($user['username']);
+                  $role = $user['role'];
+                  $status = $user['status'];
+                  $created_date = formatThaiDate($user['created_at']);
+                  $row_id = 'row-' . $user['id'];
+                  $is_suspended_class = ($status === 'inactive') ? 'suspended-row' : '';
+              ?>
+              <tr id="<?php echo $row_id; ?>" class="<?php echo $is_suspended_class; ?>">
                 <td>
                   <div class="user-cell">
-                    <!-- ตัวอักษรย่อจะถูกคำนวณจากชื่อจริงอัตโนมัติ -->
+                    <!-- ตัวอักษรย่อจะถูกคำนวณด้วย JS ตามปกติ -->
                     <div class="avatar-sm bg-accent-lt text-accent">-</div>
                     <div>
-                      <p class="name">สมชาย ใจดี</p>
+                      <p class="name"><?php echo $full_name; ?></p>
                     </div>
                   </div>
                 </td>
-                <td>somchai.j</td>
+                <td><?php echo $username; ?></td>
                 <td>
-                  <select class="role-select user-role" onchange="updateRoleStyle(this)">
-                    <option value="user" selected>ผู้ใช้ทั่วไป</option>
-                    <option value="admin">ผู้ดูแลระบบ</option>
+                  <select class="role-select <?php echo $role === 'admin' ? 'admin-role' : 'user-role'; ?>" onchange="updateRoleStyle(this)">
+                    <option value="user" <?php echo $role === 'user' ? 'selected' : ''; ?>>ผู้ใช้ทั่วไป</option>
+                    <option value="admin" <?php echo $role === 'admin' ? 'selected' : ''; ?>>ผู้ดูแลระบบ</option>
                   </select>
                 </td>
-                <td><span class="status-badge badge-active">ใช้งานได้</span></td>
-                <td>วันนี้</td>
+                <td>
+                  <?php if ($status === 'active'): ?>
+                    <span class="status-badge badge-active">ใช้งานได้</span>
+                  <?php else: ?>
+                    <span class="status-badge badge-inactive">ถูกระงับ</span>
+                  <?php endif; ?>
+                </td>
+                <td><?php echo $created_date; ?></td>
                 <td class="text-right action-btns">
-                  <button class="btn-icon" title="ประวัติการเข้าใช้งาน" onclick="openHistoryModal('สมชาย ใจดี', 'somchai.j')">
+                  <button class="btn-icon" title="ประวัติการเข้าใช้งาน" onclick="openHistoryModal('<?php echo $full_name; ?>', '<?php echo $username; ?>')">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
                   </button>
-                  <button class="btn-icon" title="แก้ไข" onclick="openEditModal('row-1')">
+                  <button class="btn-icon" title="แก้ไข" onclick="openEditModal('<?php echo $row_id; ?>')">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                   </button>
-                  <button class="btn-icon btn-reject text-danger" title="ระงับ/ลบ" onclick="deleteUser('row-1')">
+                  <button class="btn-icon btn-reject text-danger" title="ระงับ/ลบ" onclick="deleteUser('<?php echo $row_id; ?>')">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                   </button>
                 </td>
               </tr>
-
-              <!-- Row 2: Active Admin -->
-              <tr id="row-2">
-                <td>
-                  <div class="user-cell">
-                    <div class="avatar-sm bg-accent-lt text-accent">-</div>
-                    <div>
-                      <p class="name">แอดมิน ภาคใต้</p>
-                    </div>
-                  </div>
-                </td>
-                <td>admin_south</td>
-                <td>
-                  <select class="role-select admin-role" onchange="updateRoleStyle(this)">
-                    <option value="user">ผู้ใช้ทั่วไป</option>
-                    <option value="admin" selected>ผู้ดูแลระบบ</option>
-                  </select>
-                </td>
-                <td><span class="status-badge badge-active">ใช้งานได้</span></td>
-                <td>01 ม.ค. 2026</td>
-                <td class="text-right action-btns">
-                  <button class="btn-icon" title="ประวัติการเข้าใช้งาน" onclick="openHistoryModal('แอดมิน ภาคใต้', 'admin_south')">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                  </button>
-                  <button class="btn-icon" title="แก้ไข" onclick="openEditModal('row-2')">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                  </button>
-                  <button class="btn-icon btn-reject text-danger" title="ระงับ/ลบ" onclick="deleteUser('row-2')">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                  </button>
-                </td>
-              </tr>
-
-              <!-- Row 3: Inactive User (ระบุคลาส suspended-row) -->
-              <tr id="row-3" class="suspended-row">
-                <td>
-                  <div class="user-cell">
-                    <div class="avatar-sm" style="background: var(--border-dk); color: white;">-</div>
-                    <div>
-                      <p class="name">มานะ อดทน</p>
-                    </div>
-                  </div>
-                </td>
-                <td>mana.a</td>
-                <td>
-                  <select class="role-select user-role" onchange="updateRoleStyle(this)">
-                    <option value="user" selected>ผู้ใช้ทั่วไป</option>
-                    <option value="admin">ผู้ดูแลระบบ</option>
-                  </select>
-                </td>
-                <td><span class="status-badge badge-inactive">ถูกระงับ</span></td>
-                <td>05 มี.ค. 2026</td>
-                <td class="text-right action-btns">
-                  <button class="btn-icon" title="ประวัติการเข้าใช้งาน" onclick="openHistoryModal('มานะ อดทน', 'mana.a')">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                  </button>
-                  <button class="btn-icon" title="แก้ไข" onclick="openEditModal('row-3')">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                  </button>
-                  <button class="btn-icon text-danger" title="ลบ" onclick="deleteUser('row-3')">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                  </button>
-                </td>
-              </tr>
+              <?php endforeach; ?>
+              <!-- จบการวนลูป PHP -->
 
             </tbody>
           </table>
@@ -246,20 +237,22 @@
         </button>
       </div>
       <div class="modal-body">
-        <table class="data-table history-table">
-          <thead>
-            <tr>
-              <th>วันที่-เวลา</th>
-              <th>IP Address</th>
-              <th>พื้นที่เข้าใช้งาน</th>
-              <th>อุปกรณ์ / เบราว์เซอร์</th>
-              <th>status</th>
-            </tr>
-          </thead>
-          <tbody id="historyTableBody">
-            <!-- จะถูกเติมข้อมูลด้วย JavaScript -->
-          </tbody>
-        </table>
+        <div class="table-responsive">
+          <table class="data-table history-table">
+            <thead>
+              <tr>
+                <th>วันที่-เวลา</th>
+                <th>IP Address</th>
+                <th>พื้นที่เข้าใช้งาน</th>
+                <th>อุปกรณ์ / เบราว์เซอร์</th>
+                <th>สถานะ</th>
+              </tr>
+            </thead>
+            <tbody id="historyTableBody">
+              <!-- ข้อมูลจำลองสำหรับประวัติ -->
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   </div>
@@ -304,10 +297,8 @@
       name = name.trim();
       let firstChar = name.charAt(0);
       
-      // รายการสระนำหน้าของภาษาไทย
       const leadingVowels = ['เ', 'แ', 'โ', 'ใ', 'ไ'];
       
-      // หากตัวอักษรแรกเป็นสระนำหน้า และยังมีตัวอักษรอื่นถัดไป ให้ดึงพยัญชนะตัวถัดไปมาใช้
       if (leadingVowels.includes(firstChar) && name.length > 1) {
         return name.charAt(1).toUpperCase();
       }
@@ -317,7 +308,6 @@
 
     // ─── ฟังก์ชันสร้างตัวย่อรูปโปรไฟล์ทั้งหมดในตารางและ Header ───
     function initializeAvatars() {
-      // 1. ตารางรายชื่อผู้ใช้
       const rows = document.querySelectorAll('#userTableBody tr:not(.empty-state-row)');
       rows.forEach(row => {
         const nameEl = row.querySelector('.name');
@@ -327,7 +317,6 @@
         }
       });
 
-      // 2. โปรไฟล์ผู้ดูแลระบบที่ล็อกอินอยู่ (Header)
       const profileNameEl = document.getElementById('profileName');
       const mainAvatarEl = document.getElementById('mainAvatar');
       if (profileNameEl && mainAvatarEl) {
@@ -358,11 +347,9 @@
       const isActive = statusBadge && statusBadge.classList.contains('badge-active');
 
       if (selectElement.value === 'user') {
-        // หากต้องการเปลี่ยน Admin เป็น User ทั่วไป
-        // ต้องตรวจสอบว่าระบบเหลือ Admin ที่ใช้งานได้อย่างน้อย 1 คนหรือไม่
         if (isActive && getActiveAdminCount() < 1) {
           alert('ไม่สามารถเปลี่ยนบทบาทได้ เนื่องจากต้องมีผู้ดูแลระบบที่ใช้งานได้อย่างน้อย 1 คนในระบบ');
-          selectElement.value = 'admin'; // ย้อนกลับสิทธิ์เดิม
+          selectElement.value = 'admin'; 
           selectElement.className = 'role-select admin-role';
           return;
         }
@@ -392,7 +379,6 @@
         }
       });
 
-      // อัปเดตตัวเลขในการ์ด
       document.getElementById('statTotal').textContent = total;
       document.getElementById('statActive').textContent = active;
       document.getElementById('statInactive').textContent = inactive;
@@ -400,12 +386,12 @@
 
     // เรียกใช้งานฟังก์ชันเมื่อเริ่มโหลดหน้าเว็บ
     document.addEventListener('DOMContentLoaded', () => {
-      initializeAvatars(); // รันฟังก์ชันใส่สัญลักษณ์ย่อรูปโปรไฟล์
+      initializeAvatars(); 
       updateStatistics();
       renderTable();
     });
 
-    // สคริปต์ลบ/ระงับผู้ใช้งาน
+    // สคริปต์ลบ/ระงับผู้ใช้งาน (อัปเดตเฉพาะ UI - อนาคตต้องต่อ API หรือ PHP)
     function deleteUser(rowId) {
       const row = document.getElementById(rowId);
       if(!row) return;
@@ -415,7 +401,6 @@
       const isAdmin = roleSelect && roleSelect.value === 'admin';
       const isActive = statusBadge && statusBadge.classList.contains('badge-active');
 
-      // ตรวจสอบความปลอดภัยหากพยายามลบ/ระงับแอดมินคนสุดท้าย
       if (isAdmin && isActive && getActiveAdminCount() <= 1) {
         alert('ไม่สามารถลบหรือระงับผู้ใช้งานรายนี้ได้ เนื่องจากเป็นผู้ดูแลระบบที่ใช้งานได้คนสุดท้ายในระบบ');
         return;
@@ -440,26 +425,8 @@
       
       const tbody = document.getElementById('historyTableBody');
       
-      let mockDataHTML = '';
-      if(userName === 'มานะ อดทน') {
-        mockDataHTML = `
-          <tr>
-            <td>27 พ.ค. 2026, 08:15 น.</td>
-            <td>102.45.1.22</td>
-            <td>สงขลา, ประเทศไทย</td>
-            <td>Chrome / Windows</td>
-            <td><span class="status-badge badge-inactive" style="background:var(--danger-bg); color:var(--danger);">เข้าสู่ระบบล้มเหลว</span></td>
-          </tr>
-          <tr>
-            <td>26 พ.ค. 2026, 14:30 น.</td>
-            <td>102.45.1.22</td>
-            <td>สงขลา, ประเทศไทย</td>
-            <td>Chrome / Windows</td>
-            <td><span class="status-badge badge-inactive" style="background:var(--danger-bg); color:var(--danger);">เข้าสู่ระบบล้มเหลว</span></td>
-          </tr>
-        `;
-      } else {
-        mockDataHTML = `
+      // ตัวอย่างข้อมูลจำลอง
+      let mockDataHTML = `
           <tr>
             <td>27 พ.ค. 2026, 09:30 น.</td>
             <td>192.168.1.45</td>
@@ -467,15 +434,7 @@
             <td>Chrome / Windows</td>
             <td><span class="status-badge badge-active">เข้าสู่ระบบสำเร็จ</span></td>
           </tr>
-          <tr>
-            <td>26 พ.ค. 2026, 15:45 น.</td>
-            <td>192.168.1.45</td>
-            <td>หาดใหญ่, สงขลา</td>
-            <td>Safari / macOS</td>
-            <td><span class="status-badge badge-active">เข้าสู่ระบบสำเร็จ</span></td>
-          </tr>
-        `;
-      }
+      `;
       tbody.innerHTML = mockDataHTML;
     }
 
@@ -534,20 +493,16 @@
       const statusBadge = row.querySelector('.status-badge');
       const isCurrentlyActive = statusBadge && statusBadge.classList.contains('badge-active');
 
-      // หากพยายามเปลี่ยนสถานะของแอดมินที่กำลังใช้งาน (Active Admin) ให้ถูกระงับ (Inactive)
       if (isAdmin && isCurrentlyActive && newStatus === 'inactive') {
-        // ต้องตรวจสอบจำนวนแอดมินที่กำลังออนไลน์อยู่เช่นกัน
         if (getActiveAdminCount() <= 1) {
           alert('ไม่สามารถระงับผู้ดูแลระบบรายนี้ได้ เนื่องจากเป็นผู้ดูแลระบบที่ใช้งานได้คนสุดท้ายในระบบ');
           return;
         }
       }
       
-      // อัปเดตชื่อและตัวอักษรย่อในรูปโปรไฟล์ตามหลักไวยากรณ์ใหม่
       row.querySelector('.name').textContent = newName;
       row.querySelector('.avatar-sm').textContent = getInitials(newName);
       
-      // อัปเดตสถานะ + เพิ่ม/ลบคลาส suspended-row สำหรับแต่งสไตล์จางลง
       const statusTd = row.querySelectorAll('td')[3];
       if(newStatus === 'active') {
         statusTd.innerHTML = '<span class="status-badge badge-active">ใช้งานได้</span>';
@@ -558,11 +513,11 @@
       }
       
       closeEditModal();
-      updateStatistics(); // อัปเดตสถิติด้านบนเผื่อมีการเปลี่ยนสถานะ
-      renderTable(); // รีเฟรชตารางใหม่เพื่อให้ตัวกรองค้นหาอัปเดตตาม
+      updateStatistics(); 
+      renderTable(); 
+      // หมายเหตุ: ปัจจุบันเป็นการอัปเดตบนหน้าจอ (UI) เท่านั้น ต้องทำ Backend API เพื่อบันทึกลง SQL จริง
     }
 
-    // ปิด Modal เมื่อคลิกพื้นที่ว่างด้านนอก
     window.onclick = function(event) {
       const historyModal = document.getElementById('historyModal');
       const editModal = document.getElementById('editModal');
@@ -580,7 +535,6 @@
     let searchQuery = '';
     let statusQuery = '';
 
-    // ฟังก์ชันกรองตามสถานะจาก Dropdown
     function filterByStatus(statusValue) {
       statusQuery = statusValue;
       currentPage = 1;
@@ -592,13 +546,11 @@
       const tbody = document.getElementById('userTableBody');
       const rows = tbody.querySelectorAll('tr:not(.empty-state-row)');
       
-      // ลบข้อความแจ้งเตือนสถานะว่างเดิมออกก่อน (ถ้ามี)
       const existingEmpty = tbody.querySelector('.empty-state-row');
       if (existingEmpty) existingEmpty.remove();
 
       let matchedRows = [];
 
-      // 1. กรองข้อมูล (Search และ Status Filter)
       rows.forEach(row => {
         const nameEl = row.querySelector('.name');
         const usernameEl = row.querySelectorAll('td')[1];
@@ -626,7 +578,6 @@
 
       const totalItems = matchedRows.length;
 
-      // กรณีไม่มีข้อมูลใดๆ ในตารางเลย
       if (totalItems === 0) {
         const emptyRow = document.createElement('tr');
         emptyRow.className = 'empty-state-row';
@@ -638,14 +589,12 @@
         return;
       }
 
-      // 2. คำนวณหน้า
       const totalPages = Math.ceil(totalItems / rowsPerPage) || 1;
       if (currentPage > totalPages) currentPage = totalPages;
 
       const startIndex = (currentPage - 1) * rowsPerPage;
       const endIndex = Math.min(startIndex + rowsPerPage, totalItems);
 
-      // 3. แสดง/ซ่อนแถวตามหน้าปัจจุบัน
       matchedRows.forEach((row, index) => {
         if (index >= startIndex && index < endIndex) {
           row.style.display = '';
@@ -654,11 +603,9 @@
         }
       });
 
-      // 4. อัปเดตข้อความ Pagination
       const displayStart = totalItems === 0 ? 0 : startIndex + 1;
       document.getElementById('paginationInfo').textContent = `แสดง ${displayStart} ถึง ${endIndex} จาก ${totalItems} รายการ`;
 
-      // 5. สร้างปุ่ม Pagination
       const paginationControls = document.getElementById('paginationControls');
       if (paginationControls) {
         let buttonsHTML = `<button class="btn-page" ${currentPage === 1 ? 'disabled' : ''} onclick="changePage(${currentPage - 1})">ก่อนหน้า</button>`;
@@ -678,7 +625,6 @@
       renderTable();
     }
 
-    // ค้นหาแบบ Real-time
     document.getElementById('searchInput').addEventListener('input', function(e) {
       searchQuery = e.target.value.toLowerCase();
       currentPage = 1;

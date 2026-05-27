@@ -21,12 +21,7 @@
     <aside class="panel-left">
 
       <div class="brand-area">
-
-        <!-- เปลี่ยน path รูปตรงนี้ -->
         <img class="brand-logo-img" src="./south_2.png" />
-
-        <!-- <div class="panel-divider"></div> -->
-
         <p class="panel-desc">
           ระบบบริหารจัดการเนื้อหาและจอแสดงผลดิจิทัลสำหรับ Regional Science Park South
         </p>
@@ -49,7 +44,7 @@
 
       <div>
         <p class="panel-footer-text">
-          Regional Science Park South © 2025<br>
+          Regional Science Park South © 2026<br>
           Digital Signage Platform
         </p>
       </div>
@@ -63,73 +58,81 @@
 
         <div class="form-header">
           <p class="form-eyebrow">RSP South DigiBoard</p>
-
           <h1 class="form-heading">เข้าสู่ระบบ</h1>
-
           <p class="form-subtext">
             กรอกข้อมูลเพื่อเข้าใช้งานระบบ<br>
             จัดการจอแสดงผล RSP South
           </p>
         </div>
 
-        <form id="loginForm">
+        <!-- ชี้ปลายทางไปประมวลผลล็อกอิน -->
+        <form id="loginForm" method="POST" action="login_process.php">
 
           <div class="field">
             <label for="username">ชื่อผู้ใช้งาน</label>
-
             <div class="input-wrap">
-
               <span class="input-icon">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                   <circle cx="12" cy="8" r="4" />
                   <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
                 </svg>
               </span>
-
-              <input type="text" id="username" placeholder="กรอก Username" />
+              <input type="text" id="username" name="username" required placeholder="กรอก Username" />
             </div>
           </div>
 
           <div class="field">
             <label for="password">รหัสผ่าน</label>
-
             <div class="input-wrap">
-
               <span class="input-icon">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                   <rect x="3" y="11" width="18" height="11" rx="2" />
                   <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                 </svg>
               </span>
-
-              <input type="password" id="password" placeholder="กรอก Password" />
-
-              <button type="button" class="toggle-pw" id="togglePw">
-                👁
-              </button>
+              <input type="password" id="password" name="password" required placeholder="กรอก Password" />
+              <button type="button" class="toggle-pw" id="togglePw">👁</button>
             </div>
+          </div>
+
+          <div class="options-row">
+            <label class="checkbox-label">
+              <input type="checkbox" name="remember" />
+              จดจำการเข้าสู่ระบบ
+            </label>
+            <a href="#" class="forgot-link">ลืมรหัสผ่าน?</a>
           </div>
 
           <button type="submit" class="btn-submit">
             เข้าสู่ระบบ
           </button>
 
-          <div class="msg-error" id="errorMsg">
-            ชื่อผู้ใช้งานหรือรหัสผ่านไม่ถูกต้อง
-          </div>
+          <!-- ตรวจจับข้อผิดพลาดจากการส่งพารามิเตอร์กลับจาก PHP -->
+          <?php if (isset($_GET['error'])): ?>
+            <div class="msg-error show" id="errorMsg">
+              <?php 
+                if ($_GET['error'] == 'empty') {
+                    echo "กรุณากรอกชื่อผู้ใช้งานและรหัสผ่าน";
+                } elseif ($_GET['error'] == 'suspended') {
+                    echo "บัญชีผู้ใช้นี้ถูกระงับการใช้งาน กรุณาติดต่อผู้ดูแลระบบ";
+                } else {
+                    echo "ชื่อผู้ใช้งานหรือรหัสผ่านไม่ถูกต้อง";
+                }
+              ?>
+            </div>
+          <?php else: ?>
+            <div class="msg-error" id="errorMsg">
+              ชื่อผู้ใช้งานหรือรหัสผ่านไม่ถูกต้อง
+            </div>
+          <?php endif; ?>
 
         </form>
 
         <div class="form-footer">
-          ยังไม่มีบัญชีใช่ไหม? <a href="register.html">ลงทะเบียนใหม่</a><br>
+          ยังไม่มีบัญชีใช่ไหม? <a href="register.php">ลงทะเบียนใหม่</a><br>
           <span style="font-size: 0.78rem;">ต้องการความช่วยเหลือ? <a href="#"
               style="font-weight: normal; color: var(--accent);">ติดต่อผู้ดูแลระบบ</a></span>
         </div>
-
-        <!-- <div class="status-row">
-          <div class="status-dot"></div>
-          ระบบออนไลน์ · v3.1.0
-        </div> -->
 
       </div>
 
@@ -142,47 +145,9 @@
     const pwInput = document.getElementById('password');
 
     togglePw.addEventListener('click', () => {
-      pwInput.type =
-        pwInput.type === 'password'
-          ? 'text'
-          : 'password';
+      pwInput.type = pwInput.type === 'password' ? 'text' : 'password';
     });
-
-    document
-      .getElementById('loginForm')
-      .addEventListener('submit', function (e) {
-
-        e.preventDefault();
-
-        const user = document
-          .getElementById('username')
-          .value
-          .trim();
-
-        const pass = pwInput.value;
-
-        const errorMsg =
-          document.getElementById('errorMsg');
-
-        errorMsg.classList.remove('show');
-
-        if (!user || !pass) {
-          errorMsg.textContent =
-            'กรุณากรอกชื่อผู้ใช้งานและรหัสผ่าน';
-
-          errorMsg.classList.add('show');
-          return;
-        }
-
-        setTimeout(() => {
-          errorMsg.textContent =
-            'ชื่อผู้ใช้งานหรือรหัสผ่านไม่ถูกต้อง';
-
-          errorMsg.classList.add('show');
-        }, 800);
-      });
   </script>
 
 </body>
-
 </html>
